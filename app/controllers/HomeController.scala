@@ -6,11 +6,9 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.{WSClient, WSRequest}
 import javax.inject.Inject
 import play.api.libs.ws.JsonBodyWritables._
-
 import scala.concurrent.{Await, Future}
 import play.api.mvc._
 import akka.actor.ActorSystem
-
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import java.io.{FileOutputStream => FileStream, OutputStreamWriter => StreamWriter}
@@ -71,17 +69,16 @@ class HomeController @Inject()(cc: ControllerComponents, ws: WSClient) extends A
   }
 
   //勝ったDSPにDataを送る
-  //この中でlog生成
   def sendWinNotice(postValue: WinNotice, request: WSRequest): Unit ={
     val complexRequest =
       request.addHttpHeaders ("Accept" -> "application/json")
         .withRequestTimeout(100.millis)
         .post (Json.toJson(postValue))
+    //ログ生成
     writeLog(postValue)
   }
 
   //ログファイルに書き込み
-  //WinNoticeのmodelを受け取ってパースすればええやろ
   def writeLog(value: WinNotice): Unit ={
     val fileName = "log1.txt"
     val encode = "UTF-8"
