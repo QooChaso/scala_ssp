@@ -1,4 +1,4 @@
-package Models
+package models
 
 case class dspResponse(request_id: String, url: String, price: Float)
 

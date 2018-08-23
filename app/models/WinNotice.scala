@@ -1,4 +1,4 @@
-package Models
+package models
 
 import play.api.libs.json.{Json, Writes}
 import play.api.libs.ws.JsonBodyWritables._
