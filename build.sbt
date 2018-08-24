@@ -1,7 +1,8 @@
 name := "Intern_SSP"
  
-version := "1.0" 
-      
+version := "1.0"
+
+import play.sbt.PlayScala
 lazy val `intern_ssp` = (project in file(".")).enablePlugins(PlayScala)
 
 resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"

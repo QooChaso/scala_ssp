@@ -14,25 +14,44 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents, ws: WSClient) extends AbstractController(cc) {
-  val DSPurl: String = "http://localhost:8080"
+
+  val DSPurl: String = "http://10.100.100.20"
+  val request1: WSRequest = ws.url(DSPurl+"/req")
+  val DSPurl2: String = "http://10.100.100.22"
+  val request2: WSRequest = ws.url(DSPurl2+"/req")
+  val DSPurl3: String = "http://10.100.100.24"
+  val request3: WSRequest = ws.url(DSPurl2+"/req")
+
+/*
+  val DSPurl: String = "http://localhpst:8080"
   val request1: WSRequest = ws.url(DSPurl+"/req")
   val DSPurl2: String = "http://localhost:8081"
   val request2: WSRequest = ws.url(DSPurl2+"/req")
+  val DSPurl3: String = "http://localhost:8082"
+  val request3: WSRequest = ws.url(DSPurl2+"/req")
+  */
 
   //curl http://localhost:9000/req -X POST -H "Content-Type: application/json" -d '{"app_id": 123}'
 
   //SDKからリクエストを受け取る
   def index: Action[JsValue] = Action(parse.json).async { request =>
+
     Future {
       (request.body \ "app_id").asOpt[Int] match {
         case Some(s) =>
           //DSPの台数が増えた場合にはここに追加する
           val responseList: List[Future[Option[dspResponse]]] =
-            List(DspManager.requestToDsp(s, request1, DSPurl), DspManager.requestToDsp(s, request2, DSPurl2))
+          //val responseList: List[Future[Option[String]]] =
+            List(DspManager.requestToDsp(s, request1, DSPurl),
+              DspManager.requestToDsp(s, request2, DSPurl2),
+              DspManager.requestToDsp(s, request3, DSPurl3))
+
           val futureOfList: Future[List[Option[dspResponse]]] = Future.sequence(responseList)
           val hoge: Future[List[dspResponse]] = futureOfList.map{ x => x.flatten }
+
           val winReqestProcess: Future[String] = hoge.map{ x =>
             var winPrice: Float = 0
+            //val winD = dspResponse("aaaa","aaa", 100, "http://10.100.100.20")
             val winD: dspResponse = x.maxBy(_.price)
             //セカンドプライス = 最大価格のデータを取り除いた要素の最大価格 + 1
             if(x.length >= 2) winPrice = x.filterNot(p => p.price == winD.price ).maxBy(_.price).price + 1
@@ -42,7 +61,9 @@ class HomeController @Inject()(cc: ControllerComponents, ws: WSClient) extends A
             DspManager.sendWinNotice(winNotice, ws.url(winD.reqUrl))
             winUrl
           }
-          val winUrl: String = Await.result(winReqestProcess, Duration.Inf)
+
+
+          val winUrl: String = Await.result(winReqestProcess, 1000.millis)
           Ok(Json.toJson("url" -> winUrl))
         case None => BadRequest("argment error")
       }
